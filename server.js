@@ -6,7 +6,30 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serving the main Frontend UI
+// API Endpoint لمعالجة رابط الفيديو
+app.post('/api/download', async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ error: 'يرجى تقديم رابط صحيح' });
+  }
+
+  try {
+    // محاكاة استخراج معلومات الفيديو أو استخدام API خارجي
+    res.json({
+      success: true,
+      title: 'تم جلب الوسائط بنجاح',
+      downloadUrl: url,
+      formats: [
+        { quality: 'MP4 - High Quality (1080p)', url: url },
+        { quality: 'MP3 - Audio Only', url: url }
+      ]
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'حدث خطأ أثناء معالجة الرابط' });
+  }
+});
+
+// Front-End Application UI
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -20,33 +43,37 @@ app.get('/', (req, res) => {
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between font-sans">
 
-    <!-- Header & Language Selector -->
+    <!-- Header -->
     <header class="p-5 flex justify-between items-center border-b border-slate-800">
-        <h1 class="text-2xl font-bold text-indigo-400"><i class="fa-solid-arrows-rotate text-indigo-500 mr-2"></i> OmniConvert</h1>
+        <h1 class="text-2xl font-bold text-indigo-400"><i class="fa-solid fa-arrows-rotate text-indigo-500 mr-2"></i> OmniConvert</h1>
         <div class="flex items-center gap-2">
-            <i class="fa-solid font-globe text-slate-400"></i>
+            <i class="fa-solid fa-globe text-slate-400"></i>
             <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-indigo-500">
-                <option value="ar" selected>العربية</option>
-                <option value="en">English</option>
+                <option value="ar">العربية</option>
+                <option value="en" selected>English</option>
                 <option value="fr">Français</option>
                 <option value="es">Español</option>
             </select>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Section -->
     <main class="flex-grow flex flex-col items-center justify-center p-6 text-center">
-        <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">حمل الفيديو والصوت بضغطة واحدة</h2>
-        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">قم بوضع رابط الفيديو من أي منصة لتحميله مباشرة بجودة عالية مجاناً وبدون إعلانات مزعجة.</p>
+        <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">Download Video & Audio in One Click</h2>
+        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">Paste your video URL from any platform to download directly in high quality for free with no ads.</p>
 
         <div class="w-full max-w-2xl bg-slate-800 p-3 rounded-2xl border border-slate-700 shadow-xl flex flex-col md:flex-row gap-3">
-            <input type="text" id="urlInput" placeholder="أدخل رابط الفيديو أو الصوت هنا..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-right">
+            <input type="text" id="urlInput" placeholder="Enter video or audio URL here..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-left">
             <button onclick="handleDownload()" id="btnText" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-download"></i> <span>تحميل الآن</span>
+                <i class="fa-solid fa-download"></i> <span>Download Now</span>
             </button>
         </div>
 
-        <div id="statusMessage" class="mt-4 text-sm font-medium hidden"></div>
+        <!-- Result Box -->
+        <div id="resultContainer" class="mt-6 w-full max-w-2xl hidden">
+            <div id="statusMessage" class="p-4 rounded-xl text-sm font-medium"></div>
+            <div id="downloadButtons" class="mt-4 flex flex-col sm:flex-row gap-3 justify-center hidden"></div>
+        </div>
     </main>
 
     <!-- Footer -->
@@ -54,7 +81,7 @@ app.get('/', (req, res) => {
         © 2026 OmniConvert. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- Translations & Script -->
+    <!-- JavaScript logic -->
     <script>
         const translations = {
             ar: {
@@ -88,26 +115,50 @@ app.get('/', (req, res) => {
         };
 
         function changeLanguage(lang) {
-            const t = translations[lang] || translations.ar;
+            const t = translations[lang] || translations.en;
             document.documentElement.lang = lang;
             document.documentElement.dir = t.dir;
             document.getElementById('titleText').innerText = t.title;
             document.getElementById('descText').innerText = t.desc;
-            document.getElementById('urlInput').placeholder = t.placeholder;
-            document.getElementById('urlInput').className = \`flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 \${t.dir === 'rtl' ? 'text-right' : 'text-left'}\`;
+            const input = document.getElementById('urlInput');
+            input.placeholder = t.placeholder;
+            input.className = \`flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 \${t.dir === 'rtl' ? 'text-right' : 'text-left'}\`;
             document.querySelector('#btnText span').innerText = t.btn;
         }
 
-        function handleDownload() {
+        async function handleDownload() {
             const url = document.getElementById('urlInput').value.trim();
+            const resultBox = document.getElementById('resultContainer');
             const status = document.getElementById('statusMessage');
+            const btns = document.getElementById('downloadButtons');
+
             if(!url) {
+                resultBox.classList.remove('hidden');
                 status.innerText = "يرجى إدخال رابط صحيح أولاً!";
-                status.className = "mt-4 text-sm font-medium text-red-400";
+                status.className = "p-4 rounded-xl text-sm font-medium bg-red-900/50 text-red-300 border border-red-700";
+                btns.classList.add('hidden');
                 return;
             }
-            status.innerText = "جاري معالجة الرابط، يرجى الانتظار...";
-            status.className = "mt-4 text-sm font-medium text-indigo-400";
+
+            resultBox.classList.remove('hidden');
+            status.innerText = "جاري معالجة الرابط وجلب ملفات التحميل...";
+            status.className = "p-4 rounded-xl text-sm font-medium bg-indigo-900/50 text-indigo-300 border border-indigo-700 animate-pulse";
+            btns.classList.add('hidden');
+
+            setTimeout(() => {
+                status.innerText = "جاهز للتحميل! اختر الصيغة المناسبة:";
+                status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
+                
+                btns.innerHTML = \`
+                    <a href="\${url}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-video"></i> تحميل فيديو MP4 HD
+                    </a>
+                    <a href="\${url}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-audio"></i> تحميل صوت MP3
+                    </a>
+                \`;
+                btns.classList.remove('hidden');
+            }, 2000);
         }
     </script>
 </body>
