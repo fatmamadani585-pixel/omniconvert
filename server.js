@@ -6,7 +6,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serving the main Application UI
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -26,8 +25,8 @@ app.get('/', (req, res) => {
         <div class="flex items-center gap-2">
             <i class="fa-solid fa-globe text-slate-400"></i>
             <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-indigo-500">
-                <option value="ar">العربية</option>
-                <option value="en" selected>English</option>
+                <option value="ar" selected>العربية</option>
+                <option value="en">English</option>
                 <option value="fr">Français</option>
                 <option value="es">Español</option>
             </select>
@@ -36,17 +35,17 @@ app.get('/', (req, res) => {
 
     <!-- Main Section -->
     <main class="flex-grow flex flex-col items-center justify-center p-6 text-center">
-        <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">Download Video & Audio in One Click</h2>
-        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">Paste your video URL from any platform to download directly in high quality for free with no ads.</p>
+        <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">حمل الفيديو والصوت بضغطة واحدة</h2>
+        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">ضع رابط الفيديو أو المقطع الصوتي لتحميله مباشرة بجودة عالية وبشكل أوتوماتيكي.</p>
 
         <div class="w-full max-w-2xl bg-slate-800 p-3 rounded-2xl border border-slate-700 shadow-xl flex flex-col md:flex-row gap-3">
-            <input type="text" id="urlInput" placeholder="Enter video or audio URL here..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-left">
+            <input type="text" id="urlInput" placeholder="أدخل رابط الفيديو أو الصوت هنا..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-right">
             <button onclick="handleDownload()" id="btnText" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-download"></i> <span>Download Now</span>
+                <i class="fa-solid fa-download"></i> <span>تحميل الآن</span>
             </button>
         </div>
 
-        <!-- Result Box -->
+        <!-- Result Container -->
         <div id="resultContainer" class="mt-6 w-full max-w-2xl hidden">
             <div id="statusMessage" class="p-4 rounded-xl text-sm font-medium"></div>
             <div id="downloadButtons" class="mt-4 flex flex-col sm:flex-row gap-3 justify-center hidden"></div>
@@ -58,33 +57,33 @@ app.get('/', (req, res) => {
         © 2026 OmniConvert. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- JavaScript logic -->
+    <!-- Script -->
     <script>
         const translations = {
             ar: {
                 title: "حمل الفيديو والصوت بضغطة واحدة",
-                desc: "قم بوضع رابط الفيديو من أي منصة لتحميله مباشرة بجودة عالية مجاناً وبدون إعلانات مزعجة.",
+                desc: "ضع رابط الفيديو أو المقطع الصوتي لتحميله مباشرة بجودة عالية وبشكل أوتوماتيكي.",
                 placeholder: "أدخل رابط الفيديو أو الصوت هنا...",
                 btn: "تحميل الآن",
                 dir: "rtl"
             },
             en: {
                 title: "Download Video & Audio in One Click",
-                desc: "Paste your video URL from any platform to download directly in high quality for free with no ads.",
+                desc: "Paste your video URL from any platform to download directly in high quality.",
                 placeholder: "Enter video or audio URL here...",
                 btn: "Download Now",
                 dir: "ltr"
             },
             fr: {
                 title: "Téléchargez Vidéo & Audio en un Clic",
-                desc: "Collez l'URL de votre vidéo depuis n'importe quelle plateforme pour la télécharger gratuitement.",
+                desc: "Collez l'URL de votre vidéo pour la télécharger directement en haute qualité.",
                 placeholder: "Entrez l'URL de la vidéo ici...",
                 btn: "Télécharger",
                 dir: "ltr"
             },
             es: {
                 title: "Descarga Video y Audio en Un Clic",
-                desc: "Pega la URL de tu video desde cualquier plataforma para descargarlo directamente gratis.",
+                desc: "Pega la URL de tu video para descargarlo directamente en alta calidad.",
                 placeholder: "Ingrese la URL del video aquí...",
                 btn: "Descargar",
                 dir: "ltr"
@@ -92,7 +91,7 @@ app.get('/', (req, res) => {
         };
 
         function changeLanguage(lang) {
-            const t = translations[lang] || translations.en;
+            const t = translations[lang] || translations.ar;
             document.documentElement.lang = lang;
             document.documentElement.dir = t.dir;
             document.getElementById('titleText').innerText = t.title;
@@ -103,18 +102,22 @@ app.get('/', (req, res) => {
             document.querySelector('#btnText span').innerText = t.btn;
         }
 
-        function cleanYoutubeUrl(url) {
-            // تنظيف الرابط من معلمات القوائم الزائدة لتفادي خطأ 404
-            return url.replace('music.youtube.com', 'youtube.com');
+        function cleanUrl(url) {
+            // تحويل رابط music.youtube إلى رابط youtube قياسي وتجريده من قوائم التشغيل
+            let cleaned = url.replace('music.youtube.com', 'www.youtube.com');
+            if (cleaned.includes('&list=')) {
+                cleaned = cleaned.split('&list=')[0];
+            }
+            return cleaned;
         }
 
         function handleDownload() {
-            let rawUrl = document.getElementById('urlInput').value.trim();
+            const rawUrl = document.getElementById('urlInput').value.trim();
             const resultBox = document.getElementById('resultContainer');
             const status = document.getElementById('statusMessage');
             const btns = document.getElementById('downloadButtons');
 
-            if(!rawUrl) {
+            if (!rawUrl) {
                 resultBox.classList.remove('hidden');
                 status.innerText = "يرجى إدخال رابط صحيح أولاً!";
                 status.className = "p-4 rounded-xl text-sm font-medium bg-red-900/50 text-red-300 border border-red-700";
@@ -122,22 +125,18 @@ app.get('/', (req, res) => {
                 return;
             }
 
-            const cleanUrl = cleanYoutubeUrl(rawUrl);
+            const cleanedUrl = cleanUrl(rawUrl);
 
             resultBox.classList.remove('hidden');
-            status.innerText = "تمت معالجة الرابط بنجاح! اختر الصيغة المطلوبة للتحميل المباشر:";
+            status.innerText = "تم تجهيز الرابط! اختر الصيغة لفتح صفحة التحميل المباشرة السريعة:";
             status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
 
-            // إعداد روابط تحميل آمنة ومباشرة مع محول y2mate المتوافق
-            const downloadMp4 = "https://www.y2mate.com/de/youtube/" + encodeURIComponent(cleanUrl);
-            const downloadMp3 = "https://y2mate.is/en/youtube-to-mp3/" + encodeURIComponent(cleanUrl);
+            // استخدام خدمة تنزيل مبسطة خالية من تعقيدات قوائم التشغيل
+            const mp4Link = "https://loader.to/api/card/?url=" + encodeURIComponent(cleanedUrl);
 
             btns.innerHTML = \`
-                <a href="\${downloadMp4}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-video"></i> تحميل فيديو MP4
-                </a>
-                <a href="\${downloadMp3}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-audio"></i> تحميل صوت MP3
+                <a href="\${mp4Link}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-download"></i> اضغط هنا لاستخراج وتحميل الملف (MP4 / MP3)
                 </a>
             \`;
             btns.classList.remove('hidden');
