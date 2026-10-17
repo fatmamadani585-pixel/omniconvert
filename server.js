@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
     <!-- Main Section -->
     <main class="flex-grow flex flex-col items-center justify-center p-6 text-center">
         <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">حمل الفيديو والصوت بضغطة واحدة</h2>
-        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله بجودة عالية فوراً.</p>
+        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله مباشرة بجودة عالية.</p>
 
         <div class="w-full max-w-2xl bg-slate-800 p-3 rounded-2xl border border-slate-700 shadow-xl flex flex-col md:flex-row gap-3">
             <input type="text" id="urlInput" placeholder="أدخل رابط الفيديو أو الصوت هنا..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-right">
@@ -62,7 +62,7 @@ app.get('/', (req, res) => {
         const translations = {
             ar: {
                 title: "حمل الفيديو والصوت بضغطة واحدة",
-                desc: "ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله بجودة عالية فوراً.",
+                desc: "ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله مباشرة بجودة عالية.",
                 placeholder: "أدخل رابط الفيديو أو الصوت هنا...",
                 btn: "تحميل الآن",
                 dir: "rtl"
@@ -102,7 +102,7 @@ app.get('/', (req, res) => {
             document.querySelector('#btnText span').innerText = t.btn;
         }
 
-        function handleDownload() {
+        async function handleDownload() {
             const url = document.getElementById('urlInput').value.trim();
             const resultBox = document.getElementById('resultContainer');
             const status = document.getElementById('statusMessage');
@@ -117,20 +117,52 @@ app.get('/', (req, res) => {
             }
 
             resultBox.classList.remove('hidden');
-            status.innerText = "تم معالجة الرابط بنجاح! اضغط على الزر أدناه لبدء التحويل الفوري:";
-            status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
+            status.innerText = "جاري الاتصال بخادم التحويل واستخراج الملف، يرجى الانتظار قليلاً...";
+            status.className = "p-4 rounded-xl text-sm font-medium bg-indigo-900/50 text-indigo-300 border border-indigo-700 animate-pulse";
+            actionDiv.innerHTML = "";
 
-            // توجيه ذكي وآمن لمعالجة الرابط عبر محولات التحويل السريعة
-            const safeRedirectUrl = "https://en.loader.to/api/button/?url=" + encodeURIComponent(url);
+            try {
+                // استدعاء خدمة معالجة الروابط المباشرة
+                const response = await fetch("https://co.wuk.sh/api/json", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        vQuality: "720"
+                    })
+                });
 
-            actionDiv.innerHTML = \`
-                <a href="\href" onclick="window.open('\${safeRedirectUrl}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm inline-flex items-center justify-center gap-2 transition shadow-lg cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> اضغط هنا لتحميل الملف بالصيغة المطلوبة
-                </a>
-            \`;
-            
-            // تحديث الرابط الفعلي للزر لتفادي أي مشاكل في النقر
-            actionDiv.querySelector('a').href = safeRedirectUrl;
+                const data = await response.json();
+
+                if (data && data.url) {
+                    status.innerText = "تم تجهيز الملف بنجاح! اضغط أدناه لبدء التنزيل الفوري:";
+                    status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
+                    
+                    actionDiv.innerHTML = \`
+                        <a href="\${data.url}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm inline-flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> تنزيل الملف الآن
+                        </a>
+                    \`;
+                } else if (data && data.picker) {
+                    status.innerText = "تم استخراج الخيارات بنجاح! اختر الملف للتحميل:";
+                    status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
+                    
+                    let buttonsHTML = '';
+                    data.picker.forEach(item => {
+                        buttonsHTML += \`<a href="\${item.url}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-xs inline-flex items-center gap-2"><i class="fa-solid fa-download"></i> \${item.type || 'تحميل'}</a>\`;
+                    });
+                    actionDiv.innerHTML = buttonsHTML;
+                } else {
+                    throw new Error("فشل الجلب");
+                }
+            } catch (err) {
+                status.innerText = "عذراً، تعذر معالجة هذا الرابط عبر الخادم المباشر. تأكد من صحة رابط يوتيوب وحاول مجدداً.";
+                status.className = "p-4 rounded-xl text-sm font-medium bg-amber-900/50 text-amber-300 border border-amber-700";
+                actionDiv.innerHTML = "";
+            }
         }
     </script>
 </body>
