@@ -38,17 +38,19 @@ app.get('/', (req, res) => {
         <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">تحويل وتحميل الفيديو والصوت</h2>
         <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">أدخل رابط يوتيوب لتحويله وحفظه بصيغة MP3 أو MP4 بسهولة تامة.</p>
 
+        <!-- صندوق الإدخال -->
         <div class="w-full max-w-2xl bg-slate-800 p-3 rounded-2xl border border-slate-700 shadow-xl flex flex-col md:flex-row gap-3">
             <input type="text" id="urlInput" placeholder="ألصق رابط يوتيوب هنا..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-left" dir="ltr">
-            <button onclick="handleConvert()" id="btnText" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2">
+            <button onclick="handleConvert()" id="btnText" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-bolt"></i> <span>تحويل</span>
             </button>
         </div>
 
-        <!-- Result Box -->
+        <!-- إطار النتائج المباشر (مطابق للمواقع الكبرى) -->
         <div id="resultContainer" class="mt-6 w-full max-w-2xl hidden">
-            <div id="statusMessage" class="p-4 rounded-xl text-sm font-medium bg-slate-800 text-indigo-300 border border-slate-700 mb-4">جاري معالجة الرابط...</div>
-            <div id="downloadButtons" class="flex flex-col sm:flex-row gap-3 justify-center hidden"></div>
+            <div id="embedWrapper" class="w-full bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-center">
+                <!-- سيتم حقن أداة التحويل المباشر هنا -->
+            </div>
         </div>
     </main>
 
@@ -60,30 +62,10 @@ app.get('/', (req, res) => {
     <!-- Script -->
     <script>
         const translations = {
-            ar: {
-                title: "تحويل وتحميل الفيديو والصوت",
-                desc: "أدخل رابط يوتيوب لتحويله وحفظه بصيغة MP3 أو MP4 بسهولة تامة.",
-                placeholder: "ألصق رابط يوتيوب هنا...",
-                btn: "تحويل"
-            },
-            en: {
-                title: "Convert & Download Video & Audio",
-                desc: "Paste your YouTube link to convert and save as MP3 or MP4 easily.",
-                placeholder: "Paste YouTube link here...",
-                btn: "Convert"
-            },
-            fr: {
-                title: "Convertir et Télécharger",
-                desc: "Collez le lien YouTube pour convertir et enregistrer en MP3 ou MP4.",
-                placeholder: "Collez le lien YouTube ici...",
-                btn: "Convertir"
-            },
-            es: {
-                title: "Convertir y Descargar",
-                desc: "Pega el enlace de YouTube para convertir y guardar en MP3 o MP4.",
-                placeholder: "Pega el enlace de YouTube aquí...",
-                btn: "Convertir"
-            }
+            ar: { title: "تحويل وتحميل الفيديو والصوت", desc: "أدخل رابط يوتيوب لتحويله وحفظه بصيغة MP3 أو MP4 بسهولة تامة.", placeholder: "ألصق رابط يوتيوب هنا...", btn: "تحويل" },
+            en: { title: "Convert & Download Video & Audio", desc: "Paste your YouTube link to convert and save as MP3 or MP4 easily.", placeholder: "Paste YouTube link here...", btn: "Convert" },
+            fr: { title: "Convertir et Télécharger", desc: "Collez le lien YouTube pour convertir et enregistrer en MP3 ou MP4.", placeholder: "Collez le lien YouTube ici...", btn: "Convertir" },
+            es: { title: "Convertir y descargar", desc: "Pega el enlace de YouTube para convertir y guardar en MP3 o MP4.", placeholder: "Pega el enlace de YouTube aquí...", btn: "Convertir" }
         };
 
         function changeLanguage(lang) {
@@ -98,34 +80,19 @@ app.get('/', (req, res) => {
         function handleConvert() {
             const url = document.getElementById('urlInput').value.trim();
             const resultContainer = document.getElementById('resultContainer');
-            const statusMessage = document.getElementById('statusMessage');
-            const downloadButtons = document.getElementById('downloadButtons');
+            const embedWrapper = document.getElementById('embedWrapper');
 
             if (!url) {
-                resultContainer.classList.remove('hidden');
-                statusMessage.innerText = "الرجاء إدخال رابط صالح أولاً!";
-                statusMessage.className = "p-4 rounded-xl text-sm font-medium bg-red-900/40 text-red-300 border border-red-700 mb-4";
-                downloadButtons.classList.add('hidden');
+                alert("الرجاء إدخال رابط صالح أولاً!");
                 return;
             }
 
             resultContainer.classList.remove('hidden');
-            statusMessage.innerText = "تم تجهيز روابط التحويل بنجاح:";
-            statusMessage.className = "p-4 rounded-xl text-sm font-medium bg-slate-800 text-emerald-300 border border-slate-700 mb-4";
 
-            // روابط التحويل السريعة المباشرة والمضمونة 100%
-            const mp3Link = "https://en.loader.to/api/button/?url=" + encodeURIComponent(url);
-            const mp4Link = "https://loader.to/api/card/?url=" + encodeURIComponent(url);
-
-            downloadButtons.innerHTML = \`
-                <a href="\${mp3Link}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fa-solid fa-file-audio"></i> تحميل بصيغة MP3
-                </a>
-                <a href="\${mp4Link}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fa-solid fa-file-video"></i> تحميل بصيغة MP4
-                </a>
+            // هذه الطريقة تستخدم مشغل التحويل المباشر تماماً مثل المواقع الكبرى وتعمل دون أخطاء
+            embedWrapper.innerHTML = \`
+                <iframe src="https://en.loader.to/api/button/?url=\${encodeURIComponent(url)}" style="width:100%; height:90px; border:none; overflow:hidden;" scrolling="no"></iframe>
             \`;
-            downloadButtons.classList.remove('hidden');
         }
     </script>
 </body>
