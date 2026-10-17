@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
     <!-- Main Section -->
     <main class="flex-grow flex flex-col items-center justify-center p-6 text-center">
         <h2 id="titleText" class="text-3xl md:text-5xl font-extrabold mb-4">حمل الفيديو والصوت بضغطة واحدة</h2>
-        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">ضع رابط الفيديو من يوتيوب أو أي منصة لتحميله مباشرة بجودة عالية.</p>
+        <p id="descText" class="text-slate-400 max-w-lg mb-8 text-sm md:text-base">ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله بجودة عالية فوراً.</p>
 
         <div class="w-full max-w-2xl bg-slate-800 p-3 rounded-2xl border border-slate-700 shadow-xl flex flex-col md:flex-row gap-3">
             <input type="text" id="urlInput" placeholder="أدخل رابط الفيديو أو الصوت هنا..." class="flex-grow bg-slate-900 text-white px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 text-right">
@@ -62,28 +62,28 @@ app.get('/', (req, res) => {
         const translations = {
             ar: {
                 title: "حمل الفيديو والصوت بضغطة واحدة",
-                desc: "ضع رابط الفيديو من يوتيوب أو أي منصة لتحميله مباشرة بجودة عالية.",
+                desc: "ضع رابط الفيديو من يوتيوب أو أي منصة لتحويله وتحميله بجودة عالية فوراً.",
                 placeholder: "أدخل رابط الفيديو أو الصوت هنا...",
                 btn: "تحميل الآن",
                 dir: "rtl"
             },
             en: {
                 title: "Download Video & Audio in One Click",
-                desc: "Paste your video URL from YouTube or any platform to download directly.",
+                desc: "Paste your video URL from YouTube or any platform to convert and download instantly.",
                 placeholder: "Enter video or audio URL here...",
                 btn: "Download Now",
                 dir: "ltr"
             },
             fr: {
                 title: "Téléchargez Vidéo & Audio en un Clic",
-                desc: "Collez l'URL de votre vidéo pour la télécharger directement.",
+                desc: "Collez l'URL de votre vidéo pour la convertir et la télécharger instantanément.",
                 placeholder: "Entrez l'URL de la vidéo ici...",
                 btn: "Télécharger",
                 dir: "ltr"
             },
             es: {
                 title: "Descarga Video y Audio en Un Clic",
-                desc: "Pega la URL de tu video para descargarlo directamente.",
+                desc: "Pega la URL de tu video para convertirlo y descargarlo instantáneamente.",
                 placeholder: "Ingrese la URL del video aquí...",
                 btn: "Descargar",
                 dir: "ltr"
@@ -117,17 +117,20 @@ app.get('/', (req, res) => {
             }
 
             resultBox.classList.remove('hidden');
-            status.innerText = "جاهز للتحميل الفوري! اختر الجودة أو الصيغة المطلوبة:";
+            status.innerText = "تم معالجة الرابط بنجاح! اضغط على الزر أدناه لبدء التحويل الفوري:";
             status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
 
-            // روابط معالجة مباشرة وآمنة تفتح صفحة التحميل الجاهزة للرابط المدخل
-            const mp4Link = "https://en.loader.to/api/button/?url=" + encodeURIComponent(url);
+            // توجيه ذكي وآمن لمعالجة الرابط عبر محولات التحويل السريعة
+            const safeRedirectUrl = "https://en.loader.to/api/button/?url=" + encodeURIComponent(url);
 
             actionDiv.innerHTML = \`
-                <a href="\${mp4Link}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm inline-flex items-center justify-center gap-2 transition shadow-lg">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> تحميل فيديو MP4 / صوت MP3
+                <a href="\href" onclick="window.open('\${safeRedirectUrl}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl text-sm inline-flex items-center justify-center gap-2 transition shadow-lg cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> اضغط هنا لتحميل الملف بالصيغة المطلوبة
                 </a>
             \`;
+            
+            // تحديث الرابط الفعلي للزر لتفادي أي مشاكل في النقر
+            actionDiv.querySelector('a').href = safeRedirectUrl;
         }
     </script>
 </body>
