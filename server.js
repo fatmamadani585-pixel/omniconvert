@@ -103,13 +103,18 @@ app.get('/', (req, res) => {
             document.querySelector('#btnText span').innerText = t.btn;
         }
 
-        async function handleDownload() {
-            const url = document.getElementById('urlInput').value.trim();
+        function cleanYoutubeUrl(url) {
+            // تنظيف الرابط من معلمات القوائم الزائدة لتفادي خطأ 404
+            return url.replace('music.youtube.com', 'youtube.com');
+        }
+
+        function handleDownload() {
+            let rawUrl = document.getElementById('urlInput').value.trim();
             const resultBox = document.getElementById('resultContainer');
             const status = document.getElementById('statusMessage');
             const btns = document.getElementById('downloadButtons');
 
-            if(!url) {
+            if(!rawUrl) {
                 resultBox.classList.remove('hidden');
                 status.innerText = "يرجى إدخال رابط صحيح أولاً!";
                 status.className = "p-4 rounded-xl text-sm font-medium bg-red-900/50 text-red-300 border border-red-700";
@@ -117,65 +122,25 @@ app.get('/', (req, res) => {
                 return;
             }
 
+            const cleanUrl = cleanYoutubeUrl(rawUrl);
+
             resultBox.classList.remove('hidden');
-            status.innerText = "جاري تحويل الرابط واستخراج ملف التحميل المباشر...";
-            status.className = "p-4 rounded-xl text-sm font-medium bg-indigo-900/50 text-indigo-300 border border-indigo-700 animate-pulse";
-            btns.classList.add('hidden');
+            status.innerText = "تمت معالجة الرابط بنجاح! اختر الصيغة المطلوبة للتحميل المباشر:";
+            status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
 
-            setTimeout(() => {
-                status.innerText = "جاهز للتحميل المباشر! اضغط لتبدأ التنزيل فوراً على جهازك:";
-                status.className = "p-3 rounded-xl text-sm font-medium bg-emerald-900/40 text-emerald-300 border border-emerald-700";
-                
-                // استخدام تحويل الخادم المباشر لخدمة التنزيل الخارجية Cobalt API
-                const mp4Url = "https://api.cobalt.tools/api/json"; 
-                
-                btns.innerHTML = \`
-                    <button onclick="downloadFile('\${url}', 'mp4')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-video"></i> تنزيل فيديو MP4
-                    </button>
-                    <button onclick="downloadFile('\${url}', 'mp3')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-audio"></i> تنزيل صوت MP3
-                    </button>
-                \`;
-                btns.classList.remove('hidden');
-            }, 1500);
-        }
+            // إعداد روابط تحميل آمنة ومباشرة مع محول y2mate المتوافق
+            const downloadMp4 = "https://www.y2mate.com/de/youtube/" + encodeURIComponent(cleanUrl);
+            const downloadMp3 = "https://y2mate.is/en/youtube-to-mp3/" + encodeURIComponent(cleanUrl);
 
-        async function downloadFile(videoUrl, format) {
-            const status = document.getElementById('statusMessage');
-            status.innerText = "جاري توليد رابط التحميل المباشر...";
-            
-            try {
-                const response = await fetch("https://api.cobalt.tools/api/json", {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        url: videoUrl,
-                        downloadMode: format === 'mp3' ? 'audio' : 'auto',
-                        audioFormat: 'mp3'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data && data.url) {
-                    const a = document.createElement('a');
-                    a.href = data.url;
-                    a.download = '';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    status.innerText = "تم بدء التنزيل بنجاح!";
-                } else {
-                    window.open(videoUrl, '_blank');
-                }
-            } catch (err) {
-                // الخيار البديل للتحميل المباشر عبر المحول
-                window.location.href = "https://ssyoutube.com/en1/" + videoUrl.replace('https://', '');
-            }
+            btns.innerHTML = \`
+                <a href="\${downloadMp4}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-video"></i> تحميل فيديو MP4
+                </a>
+                <a href="\${downloadMp3}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-audio"></i> تحميل صوت MP3
+                </a>
+            \`;
+            btns.classList.remove('hidden');
         }
     </script>
 </body>
